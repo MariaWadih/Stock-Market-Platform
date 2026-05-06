@@ -10,8 +10,12 @@ import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { MembersModule } from './members/members.module';
+import { OrdersModule } from './orders/orders.module';
 import { PriceAlertsModule } from './price-alerts/price-alerts.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 import { StocksModule } from './stocks/stocks.module';
+import { WalletModule } from './wallet/wallet.module';
+import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 
 @Module({
   imports: [
@@ -35,6 +39,10 @@ import { StocksModule } from './stocks/stocks.module';
     CmsUsersModule,
     StocksModule,
     PriceAlertsModule,
+    WalletModule,
+    WithdrawalsModule,
+    OrdersModule,
+    PortfolioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
