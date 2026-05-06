@@ -1,5 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterMemberDto } from './dto/register-member.dto';
@@ -7,6 +9,7 @@ import { SetPasswordDto } from './dto/set-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Controller()
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
