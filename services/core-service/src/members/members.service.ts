@@ -52,7 +52,7 @@ export class MembersService {
       .findByIdAndUpdate(
         memberId,
         { $set: { identityVerificationStatus: dto.status } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .select('-passwordHash');
 
@@ -73,7 +73,7 @@ export class MembersService {
             suspensionReason: dto.reason,
           },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .select('-passwordHash');
 
@@ -92,7 +92,7 @@ export class MembersService {
           $set: { status: MemberStatus.Active },
           $unset: { suspensionReason: '' },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .select('-passwordHash');
 
