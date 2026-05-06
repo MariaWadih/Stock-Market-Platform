@@ -9,7 +9,7 @@ export class CmsUser {
   @Prop({ required: true, trim: true })
   fullName!: string;
 
-  @Prop({ required: true, lowercase: true, trim: true, unique: true })
+  @Prop({ required: true, lowercase: true, trim: true })
   email!: string;
 
   @Prop({ required: true, enum: CmsRole })
