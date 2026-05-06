@@ -9,7 +9,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CmsUsersModule } from './cms-users/cms-users.module';
 import configuration from './config/configuration';
-import { envValidationSchema } from './config/env.validation';
+import { validateEnvironment } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { MembersModule } from './members/members.module';
 
@@ -18,7 +18,7 @@ import { MembersModule } from './members/members.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-      validationSchema: envValidationSchema,
+      validate: validateEnvironment,
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
