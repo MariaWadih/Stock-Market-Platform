@@ -10,6 +10,8 @@ import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { Model } from 'mongoose';
 import { CmsRole } from '../common/enums/cms-role.enum';
+import { NotificationEventType } from '../notifications/notification-event';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateCmsUserDto } from './dto/create-cms-user.dto';
 import { CmsUser, CmsUserDocument } from './schemas/cms-user.schema';
 
@@ -23,6 +25,7 @@ export class CmsUsersService implements OnModuleInit {
     @InjectModel(CmsUser.name)
     private readonly cmsUserModel: Model<CmsUserDocument>,
     private readonly configService: ConfigService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -50,7 +53,17 @@ export class CmsUsersService implements OnModuleInit {
       mustChangePassword: true,
     });
 
-    // The messaging branch will publish cms_user.created with the temporary password.
+    await this.notificationsService.publish({
+      type: NotificationEventType.CmsUserProvisioned,
+      occurredAt: new Date().toISOString(),
+      payload: {
+        email: cmsUser.email,
+        fullName: cmsUser.fullName,
+        role: cmsUser.role,
+        temporaryPassword,
+      },
+    });
+
     return {
       id: cmsUser.id,
       email: cmsUser.email,

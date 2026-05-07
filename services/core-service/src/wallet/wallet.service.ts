@@ -8,6 +8,9 @@ import { Model, Types } from 'mongoose';
 import { TransactionStatus } from '../common/enums/transaction-status.enum';
 import { TransactionType } from '../common/enums/transaction-type.enum';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
+import { Member, MemberDocument } from '../members/schemas/member.schema';
+import { NotificationEventType } from '../notifications/notification-event';
+import { NotificationsService } from '../notifications/notifications.service';
 import { DepositDto } from './dto/deposit.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 import {
@@ -32,6 +35,9 @@ export class WalletService {
     private readonly walletModel: Model<WalletDocument>,
     @InjectModel(WalletTransaction.name)
     private readonly walletTransactionModel: Model<WalletTransactionDocument>,
+    @InjectModel(Member.name)
+    private readonly memberModel: Model<MemberDocument>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async getWallet(user: AuthenticatedUser) {
@@ -59,6 +65,22 @@ export class WalletService {
       status: TransactionStatus.Completed,
       amount: dto.amount,
       description: 'Wallet deposit',
+    });
+
+    const member = await this.memberModel
+      .findById(memberId)
+      .select('email fullName')
+      .orFail(() => new NotFoundException('Member not found'))
+      .exec();
+    await this.notificationsService.publish({
+      type: NotificationEventType.WalletCredited,
+      occurredAt: new Date().toISOString(),
+      payload: {
+        email: member.email,
+        fullName: member.fullName,
+        amount: dto.amount,
+        balance: wallet.balance,
+      },
     });
 
     return wallet;
