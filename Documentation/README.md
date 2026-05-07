@@ -25,4 +25,4 @@ The collection is written against the gateway so requests exercise routing, requ
 
 The core service publishes RabbitMQ events for OTP delivery, wallet credit confirmations, trade execution confirmations, price alerts, and CMS account provisioning.
 
-The notification service consumes those events from the `notifications` exchange and sends email through SendGrid. A real `SENDGRID_API_KEY` and verified `EMAIL_FROM` sender are required for end-to-end email delivery.
+The notification service consumes those events from the `notifications` exchange and sends email through Gmail SMTP. A Gmail address with 2-Step Verification enabled and an app password are required. Set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `EMAIL_FROM`.

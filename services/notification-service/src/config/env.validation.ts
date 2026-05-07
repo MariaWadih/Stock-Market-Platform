@@ -26,7 +26,11 @@ class NotificationEnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  SENDGRID_API_KEY!: string;
+  GMAIL_USER!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  GMAIL_APP_PASSWORD!: string;
 
   @IsEmail()
   EMAIL_FROM!: string;

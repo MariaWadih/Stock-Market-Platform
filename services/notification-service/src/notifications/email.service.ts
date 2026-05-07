@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import sgMail from '@sendgrid/mail';
+import { Transporter, createTransport } from 'nodemailer';
 import { NotificationEvent, NotificationEventType } from './notification-event';
 
 interface EmailContent {
@@ -13,16 +13,23 @@ interface EmailContent {
 @Injectable()
 export class EmailService {
   private readonly from: string;
+  private readonly transporter: Transporter;
 
   constructor(configService: ConfigService) {
-    sgMail.setApiKey(configService.getOrThrow<string>('email.sendgridApiKey'));
     this.from = configService.getOrThrow<string>('email.from');
+    this.transporter = createTransport({
+      service: 'gmail',
+      auth: {
+        user: configService.getOrThrow<string>('email.gmailUser'),
+        pass: configService.getOrThrow<string>('email.gmailAppPassword'),
+      },
+    });
   }
 
   async sendNotification(event: NotificationEvent): Promise<void> {
     const content = this.render(event);
 
-    await sgMail.send({
+    await this.transporter.sendMail({
       from: this.from,
       ...content,
     });

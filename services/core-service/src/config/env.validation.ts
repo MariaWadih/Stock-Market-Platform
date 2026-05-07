@@ -86,14 +86,6 @@ class CoreEnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  SENDGRID_API_KEY?: string;
-
-  @IsEmail()
-  @IsOptional()
-  EMAIL_FROM?: string;
-
-  @IsString()
-  @IsOptional()
   STRIPE_SECRET_KEY?: string;
 
   @IsString()
