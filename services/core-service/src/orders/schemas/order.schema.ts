@@ -37,3 +37,4 @@ OrderSchema.index({ memberId: 1, createdAt: -1 });
 OrderSchema.index({ stockId: 1, createdAt: -1 });
 OrderSchema.index({ type: 1, createdAt: -1 });
 OrderSchema.index({ stockId: 1, type: 1, createdAt: -1 });
+OrderSchema.index({ createdAt: -1, memberId: 1 });

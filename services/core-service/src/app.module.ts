@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AuthModule } from './auth/auth.module';
 import { CmsUsersModule } from './cms-users/cms-users.module';
 import configuration from './config/configuration';
@@ -43,6 +44,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
     WithdrawalsModule,
     OrdersModule,
     PortfolioModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
