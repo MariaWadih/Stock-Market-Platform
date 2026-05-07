@@ -10,6 +10,7 @@ import { OrderType } from '../common/enums/order-type.enum';
 import { TransactionStatus } from '../common/enums/transaction-status.enum';
 import { TransactionType } from '../common/enums/transaction-type.enum';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
+import { roundMoney } from '../common/utils/money.util';
 import {
   PortfolioPosition,
   PortfolioPositionDocument,
@@ -50,7 +51,7 @@ export class OrdersService {
       throw new NotFoundException('Listed stock not found');
     }
 
-    const totalValue = this.roundMoney(stock.currentPrice * dto.quantity);
+    const totalValue = roundMoney(stock.currentPrice * dto.quantity);
     const wallet = await this.walletModel.findOneAndUpdate(
       { memberId, balance: { $gte: totalValue } },
       { $inc: { balance: -totalValue } },
@@ -105,8 +106,8 @@ export class OrdersService {
       throw new BadRequestException('Insufficient shares for sell order');
     }
 
-    const totalValue = this.roundMoney(stock.currentPrice * dto.quantity);
-    const realizedProfitLoss = this.roundMoney(
+    const totalValue = roundMoney(stock.currentPrice * dto.quantity);
+    const realizedProfitLoss = roundMoney(
       (stock.currentPrice - position.averagePrice) * dto.quantity,
     );
     const wallet = await this.walletModel.findOneAndUpdate(
@@ -181,7 +182,7 @@ export class OrdersService {
       position.averagePrice * position.quantity + stock.currentPrice * quantity;
     const newQuantity = position.quantity + quantity;
     position.quantity = newQuantity;
-    position.averagePrice = this.roundMoney(totalCost / newQuantity);
+    position.averagePrice = roundMoney(totalCost / newQuantity);
     position.ticker = stock.ticker;
     await position.save();
   }
@@ -205,9 +206,5 @@ export class OrdersService {
     if (user.type !== 'member') {
       throw new ForbiddenException('Only members can place orders');
     }
-  }
-
-  private roundMoney(value: number): number {
-    return Math.round(value * 100) / 100;
   }
 }
