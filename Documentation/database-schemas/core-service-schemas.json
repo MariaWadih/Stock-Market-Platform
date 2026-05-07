@@ -1,0 +1,200 @@
+{
+  "service": "core-service",
+  "database": "stock_market_platform",
+  "collections": {
+    "members": {
+      "description": "Retail investor accounts.",
+      "fields": {
+        "fullName": "string, required",
+        "email": "string, required, lowercase, unique",
+        "nationalId": "string, required, unique",
+        "dateOfBirth": "date, required",
+        "passwordHash": "string, optional",
+        "isEmailVerified": "boolean, default false",
+        "identityVerificationStatus": "pending | approved | rejected, default pending",
+        "status": "active | suspended, default active",
+        "suspensionReason": "string, optional",
+        "createdAt": "date, managed by Mongoose",
+        "updatedAt": "date, managed by Mongoose"
+      },
+      "indexes": [
+        { "email": 1, "unique": true },
+        { "nationalId": 1, "unique": true },
+        { "status": 1, "createdAt": -1 },
+        { "identityVerificationStatus": 1, "createdAt": -1 }
+      ]
+    },
+    "cmsusers": {
+      "description": "Internal CMS users.",
+      "fields": {
+        "fullName": "string, required",
+        "email": "string, required, lowercase, unique",
+        "role": "administrator | analyst | support_agent, required",
+        "passwordHash": "string, required",
+        "mustChangePassword": "boolean, default true",
+        "isActive": "boolean, default true",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "email": 1, "unique": true },
+        { "role": 1, "isActive": 1 }
+      ]
+    },
+    "stocks": {
+      "description": "Tradable stock catalogue.",
+      "fields": {
+        "ticker": "string, required, uppercase, unique",
+        "companyName": "string, required",
+        "sector": "string, required",
+        "currentPrice": "number, required, min 0",
+        "description": "string, required",
+        "isListed": "boolean, default true",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "ticker": 1, "unique": true },
+        { "sector": 1, "isListed": 1 },
+        { "isListed": 1, "createdAt": -1 }
+      ]
+    },
+    "pricehistories": {
+      "description": "Historical stock prices written whenever stock price changes.",
+      "fields": {
+        "stockId": "ObjectId ref Stock, required",
+        "ticker": "string, required",
+        "price": "number, required",
+        "recordedAt": "date, required"
+      },
+      "indexes": [
+        { "stockId": 1, "recordedAt": -1 },
+        { "ticker": 1, "recordedAt": -1 }
+      ]
+    },
+    "wallets": {
+      "description": "Member wallet balances.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required, unique",
+        "balance": "number, required, min 0, default 0",
+        "lastDepositAt": "date, optional",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "unique": true },
+        { "balance": 1 }
+      ]
+    },
+    "wallettransactions": {
+      "description": "Ledger of deposits, withdrawals, buys, and sells.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "walletId": "ObjectId ref Wallet, required",
+        "type": "deposit | withdrawal | buy | sell, required",
+        "status": "pending | completed | failed, required",
+        "amount": "number, required, min 0",
+        "description": "string, optional",
+        "stockId": "ObjectId ref Stock, optional",
+        "orderId": "ObjectId ref Order, optional",
+        "withdrawalRequestId": "ObjectId ref WithdrawalRequest, optional",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "createdAt": -1 },
+        { "memberId": 1, "type": 1, "createdAt": -1 },
+        { "type": 1, "status": 1, "createdAt": -1 }
+      ]
+    },
+    "orders": {
+      "description": "Executed market buy and sell orders.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "stockId": "ObjectId ref Stock, required",
+        "ticker": "string, required",
+        "type": "buy | sell, required",
+        "quantity": "number, required, min 0",
+        "price": "number, required, min 0",
+        "totalValue": "number, required, min 0",
+        "realizedProfitLoss": "number, optional",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "createdAt": -1 },
+        { "stockId": 1, "createdAt": -1 },
+        { "type": 1, "createdAt": -1 },
+        { "stockId": 1, "type": 1, "createdAt": -1 },
+        { "createdAt": -1, "memberId": 1 }
+      ]
+    },
+    "portfoliopositions": {
+      "description": "Open member stock positions.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "stockId": "ObjectId ref Stock, required",
+        "ticker": "string, required",
+        "quantity": "number, required, min 0",
+        "averagePrice": "number, required, min 0",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "stockId": 1, "unique": true },
+        { "memberId": 1, "createdAt": -1 },
+        { "stockId": 1 },
+        { "quantity": 1, "stockId": 1 }
+      ]
+    },
+    "withdrawalrequests": {
+      "description": "CMS-reviewed member withdrawal requests.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "amount": "number, required, min 0",
+        "status": "pending | approved | rejected, required, default pending",
+        "reviewedBy": "ObjectId ref CmsUser, optional",
+        "reviewedAt": "date, optional",
+        "rejectionReason": "string, optional",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "createdAt": -1 },
+        { "status": 1, "createdAt": -1 }
+      ]
+    },
+    "pricealerts": {
+      "description": "Member price threshold alerts.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "stockId": "ObjectId ref Stock, required",
+        "ticker": "string, required",
+        "targetPrice": "number, required, min 0",
+        "direction": "above | below, required",
+        "isActive": "boolean, default true",
+        "triggeredAt": "date, optional",
+        "createdAt": "date",
+        "updatedAt": "date"
+      }
+    },
+    "otps": {
+      "description": "Short-lived OTP verification records.",
+      "fields": {
+        "email": "string, required, lowercase",
+        "purpose": "member_registration | password_reset, required",
+        "codeHash": "string, required",
+        "expiresAt": "date, required, TTL index",
+        "consumedAt": "date, optional",
+        "attempts": "number, default 0",
+        "memberId": "ObjectId ref Member, optional",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "email": 1, "purpose": 1, "createdAt": -1 },
+        { "expiresAt": 1, "expireAfterSeconds": 0 }
+      ]
+    }
+  }
+}
