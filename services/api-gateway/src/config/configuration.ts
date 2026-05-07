@@ -10,6 +10,10 @@ export default () => ({
       10,
     ),
   },
+  redis: {
+    host: process.env.REDIS_HOST ?? 'localhost',
+    port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+  },
   upstreams: {
     core: process.env.CORE_SERVICE_URL ?? 'http://localhost:3000',
     notification:

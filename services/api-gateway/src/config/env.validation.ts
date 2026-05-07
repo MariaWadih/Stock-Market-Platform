@@ -49,6 +49,15 @@ class GatewayEnvironmentVariables {
   @IsNotEmpty()
   @IsOptional()
   NODE_ENV?: string;
+
+  @IsString()
+  @IsOptional()
+  REDIS_HOST = 'localhost';
+
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  REDIS_PORT = 6379;
 }
 
 export function validateEnvironment(

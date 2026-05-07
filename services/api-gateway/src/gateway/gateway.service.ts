@@ -49,7 +49,7 @@ export class GatewayService {
       ? await this.authenticate(request)
       : undefined;
 
-    this.rateLimitService.consume(request, user);
+    await this.rateLimitService.consume(request, user);
     this.validateRequest(request);
 
     const upstreamUrl = this.buildUpstreamUrl(
@@ -182,7 +182,7 @@ export class GatewayService {
   }
 
   private shouldSkipRequestHeader(name: string): boolean {
-    return ['connection', 'content-length', 'host'].includes(
+    return ['connection', 'content-length', 'expect', 'host'].includes(
       name.toLowerCase(),
     );
   }
