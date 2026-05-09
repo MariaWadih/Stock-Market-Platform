@@ -27,3 +27,4 @@ export const PortfolioPositionSchema =
 PortfolioPositionSchema.index({ memberId: 1, stockId: 1 }, { unique: true });
 PortfolioPositionSchema.index({ memberId: 1, createdAt: -1 });
 PortfolioPositionSchema.index({ stockId: 1 });
+PortfolioPositionSchema.index({ quantity: 1, stockId: 1 });

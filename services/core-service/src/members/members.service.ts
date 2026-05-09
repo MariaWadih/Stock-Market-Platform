@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, UpdateQuery } from 'mongoose';
 import { IdentityVerificationStatus } from '../common/enums/identity-verification-status.enum';
 import { MemberStatus } from '../common/enums/member-status.enum';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
@@ -14,6 +14,8 @@ import { Member, MemberDocument } from './schemas/member.schema';
 
 @Injectable()
 export class MembersService {
+  private readonly publicMemberSelect = '-passwordHash';
+
   constructor(
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
@@ -28,10 +30,9 @@ export class MembersService {
 
     const member = await this.memberModel
       .findById(user.sub)
-      .select('-passwordHash');
-    if (!member) {
-      throw new NotFoundException('Member not found');
-    }
+      .select(this.publicMemberSelect)
+      .orFail(() => new NotFoundException('Member not found'))
+      .exec();
 
     return member;
   }
@@ -39,8 +40,9 @@ export class MembersService {
   async listMembers() {
     return this.memberModel
       .find()
-      .select('-passwordHash')
-      .sort({ createdAt: -1 });
+      .select(this.publicMemberSelect)
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async reviewIdentity(memberId: string, dto: ReviewIdentityDto) {
@@ -48,58 +50,32 @@ export class MembersService {
       throw new ForbiddenException('Identity review must approve or reject');
     }
 
-    const member = await this.memberModel
-      .findByIdAndUpdate(
-        memberId,
-        { $set: { identityVerificationStatus: dto.status } },
-        { returnDocument: 'after' },
-      )
-      .select('-passwordHash');
-
-    if (!member) {
-      throw new NotFoundException('Member not found');
-    }
-
-    return member;
+    return this.updateMember(memberId, {
+      $set: { identityVerificationStatus: dto.status },
+    });
   }
 
   async suspendMember(memberId: string, dto: SuspendMemberDto) {
-    const member = await this.memberModel
-      .findByIdAndUpdate(
-        memberId,
-        {
-          $set: {
-            status: MemberStatus.Suspended,
-            suspensionReason: dto.reason,
-          },
-        },
-        { returnDocument: 'after' },
-      )
-      .select('-passwordHash');
-
-    if (!member) {
-      throw new NotFoundException('Member not found');
-    }
-
-    return member;
+    return this.updateMember(memberId, {
+      $set: {
+        status: MemberStatus.Suspended,
+        suspensionReason: dto.reason,
+      },
+    });
   }
 
   async reinstateMember(memberId: string) {
-    const member = await this.memberModel
-      .findByIdAndUpdate(
-        memberId,
-        {
-          $set: { status: MemberStatus.Active },
-          $unset: { suspensionReason: '' },
-        },
-        { returnDocument: 'after' },
-      )
-      .select('-passwordHash');
+    return this.updateMember(memberId, {
+      $set: { status: MemberStatus.Active },
+      $unset: { suspensionReason: '' },
+    });
+  }
 
-    if (!member) {
-      throw new NotFoundException('Member not found');
-    }
-
-    return member;
+  private updateMember(memberId: string, update: UpdateQuery<Member>) {
+    return this.memberModel
+      .findByIdAndUpdate(memberId, update, { new: true, runValidators: true })
+      .select(this.publicMemberSelect)
+      .orFail(() => new NotFoundException('Member not found'))
+      .exec();
   }
 }
