@@ -1,0 +1,160 @@
+{
+  "notes": [
+    "ObjectId values are deterministic examples for local testing.",
+    "Password hashes are placeholders. Use the app registration/login flow or replace with bcrypt hashes before direct insertion.",
+    "Dates are ISO strings and can be imported into MongoDB as dates."
+  ],
+  "members": [
+    {
+      "_id": "665000000000000000000001",
+      "fullName": "Adam Haddad",
+      "email": "adam@example.com",
+      "nationalId": "LBN-1990-0001",
+      "dateOfBirth": "1990-05-15T00:00:00.000Z",
+      "passwordHash": "$2b$10$replaceWithRealHash",
+      "isEmailVerified": true,
+      "identityVerificationStatus": "approved",
+      "status": "active"
+    }
+  ],
+  "cmsusers": [
+    {
+      "_id": "665000000000000000000101",
+      "fullName": "System Administrator",
+      "email": "admin@example.com",
+      "role": "administrator",
+      "passwordHash": "$2b$10$replaceWithRealHash",
+      "mustChangePassword": false,
+      "isActive": true
+    },
+    {
+      "_id": "665000000000000000000102",
+      "fullName": "Leila Analyst",
+      "email": "leila@example.com",
+      "role": "analyst",
+      "passwordHash": "$2b$10$replaceWithRealHash",
+      "mustChangePassword": true,
+      "isActive": true
+    }
+  ],
+  "stocks": [
+    {
+      "_id": "665000000000000000000201",
+      "ticker": "AAPL",
+      "companyName": "Apple Inc.",
+      "sector": "Technology",
+      "currentPrice": 182.63,
+      "description": "Apple designs and manufactures consumer electronics, software, and services.",
+      "isListed": true
+    },
+    {
+      "_id": "665000000000000000000202",
+      "ticker": "MSFT",
+      "companyName": "Microsoft Corporation",
+      "sector": "Technology",
+      "currentPrice": 415.25,
+      "description": "Microsoft builds productivity software, cloud services, and enterprise platforms.",
+      "isListed": true
+    },
+    {
+      "_id": "665000000000000000000203",
+      "ticker": "XOM",
+      "companyName": "Exxon Mobil Corporation",
+      "sector": "Energy",
+      "currentPrice": 118.4,
+      "description": "Exxon Mobil is an integrated energy company.",
+      "isListed": true
+    }
+  ],
+  "wallets": [
+    {
+      "_id": "665000000000000000000301",
+      "memberId": "665000000000000000000001",
+      "balance": 2500,
+      "lastDepositAt": "2026-05-01T09:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "_id": "665000000000000000000401",
+      "memberId": "665000000000000000000001",
+      "stockId": "665000000000000000000201",
+      "ticker": "AAPL",
+      "type": "buy",
+      "quantity": 5,
+      "price": 180,
+      "totalValue": 900,
+      "createdAt": "2026-05-03T10:00:00.000Z"
+    },
+    {
+      "_id": "665000000000000000000402",
+      "memberId": "665000000000000000000001",
+      "stockId": "665000000000000000000202",
+      "ticker": "MSFT",
+      "type": "buy",
+      "quantity": 2,
+      "price": 410,
+      "totalValue": 820,
+      "createdAt": "2026-05-04T10:00:00.000Z"
+    }
+  ],
+  "portfoliopositions": [
+    {
+      "_id": "665000000000000000000501",
+      "memberId": "665000000000000000000001",
+      "stockId": "665000000000000000000201",
+      "ticker": "AAPL",
+      "quantity": 5,
+      "averagePrice": 180
+    },
+    {
+      "_id": "665000000000000000000502",
+      "memberId": "665000000000000000000001",
+      "stockId": "665000000000000000000202",
+      "ticker": "MSFT",
+      "quantity": 2,
+      "averagePrice": 410
+    }
+  ],
+  "wallettransactions": [
+    {
+      "_id": "665000000000000000000601",
+      "memberId": "665000000000000000000001",
+      "walletId": "665000000000000000000301",
+      "type": "deposit",
+      "status": "completed",
+      "amount": 5000,
+      "description": "Initial wallet deposit"
+    },
+    {
+      "_id": "665000000000000000000602",
+      "memberId": "665000000000000000000001",
+      "walletId": "665000000000000000000301",
+      "type": "buy",
+      "status": "completed",
+      "amount": 900,
+      "stockId": "665000000000000000000201",
+      "orderId": "665000000000000000000401",
+      "description": "Bought 5 shares of AAPL"
+    }
+  ],
+  "withdrawalrequests": [
+    {
+      "_id": "665000000000000000000701",
+      "memberId": "665000000000000000000001",
+      "amount": 250,
+      "status": "pending"
+    }
+  ],
+  "pricealerts": [
+    {
+      "_id": "665000000000000000000801",
+      "memberId": "665000000000000000000001",
+      "stockId": "665000000000000000000201",
+      "ticker": "AAPL",
+      "targetPrice": 190,
+      "direction": "above",
+      "isActive": true
+    }
+  ]
+}

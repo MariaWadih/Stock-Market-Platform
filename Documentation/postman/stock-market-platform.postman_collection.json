@@ -1,0 +1,204 @@
+{
+  "info": {
+    "name": "Stock Market Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Requests are configured to hit the API gateway by default. Set gatewayBaseUrl to http://localhost:8080."
+  },
+  "variable": [
+    { "key": "gatewayBaseUrl", "value": "http://localhost:8080" },
+    { "key": "memberAccessToken", "value": "" },
+    { "key": "cmsAccessToken", "value": "" },
+    { "key": "stockId", "value": "665000000000000000000201" },
+    { "key": "memberId", "value": "665000000000000000000001" },
+    { "key": "withdrawalId", "value": "665000000000000000000701" },
+    { "key": "priceAlertId", "value": "665000000000000000000801" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Member",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Adam Haddad\",\n  \"email\": \"adam@example.com\",\n  \"nationalId\": \"LBN-1990-0001\",\n  \"dateOfBirth\": \"1990-05-15\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/register" },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"OTP sent to email\"\n  }\n}"
+            },
+            {
+              "name": "Validation Error",
+              "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/register" },
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"statusCode\": 400,\n  \"message\": [\"email must be an email\"]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/auth/verify-otp",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"adam@example.com\",\n  \"code\": \"123456\"\n}" }
+          },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/verify-otp" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"OTP verified\"\n  }\n}" },
+            { "name": "Invalid OTP", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/verify-otp" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": \"Invalid or expired OTP\"\n}" }
+          ]
+        },
+        {
+          "name": "Set Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/auth/set-password",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"adam@example.com\",\n  \"password\": \"StrongPass123!\"\n}" }
+          },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/set-password" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Password set successfully\"\n  }\n}" },
+            { "name": "Not Verified", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/set-password" }, "status": "Forbidden", "code": 403, "body": "{\n  \"success\": false,\n  \"message\": \"Email is not verified\"\n}" }
+          ]
+        },
+        {
+          "name": "Member Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"adam@example.com\",\n  \"password\": \"StrongPass123!\"\n}" }
+          },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/login" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"eyJ...\",\n    \"refreshToken\": \"eyJ...\",\n    \"user\": { \"type\": \"member\", \"email\": \"adam@example.com\" }\n  }\n}" },
+            { "name": "Invalid Credentials", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/auth/login" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"success\": false,\n  \"message\": \"Invalid credentials\"\n}" }
+          ]
+        },
+        {
+          "name": "CMS Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/cms/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\"\n}" }
+          },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/cms/auth/login" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"eyJ...\",\n    \"user\": { \"type\": \"cms\", \"role\": \"administrator\" }\n  }\n}" },
+            { "name": "Invalid Credentials", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/cms/auth/login" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"success\": false,\n  \"message\": \"Invalid credentials\"\n}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Stocks",
+      "item": [
+        {
+          "name": "List Listed Stocks",
+          "request": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks" },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"ticker\": \"AAPL\", \"currentPrice\": 182.63 }]\n}" },
+            { "name": "Rate Limited", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks" }, "status": "Too Many Requests", "code": 429, "body": "{\n  \"statusCode\": 429,\n  \"message\": \"Rate limit exceeded\"\n}" }
+          ]
+        },
+        {
+          "name": "Create Stock",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/cms/stocks",
+            "body": { "mode": "raw", "raw": "{\n  \"ticker\": \"NVDA\",\n  \"companyName\": \"NVIDIA Corporation\",\n  \"sector\": \"Technology\",\n  \"currentPrice\": 900,\n  \"description\": \"NVIDIA designs GPUs and AI computing platforms.\",\n  \"isListed\": true\n}" }
+          },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/cms/stocks" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": { \"ticker\": \"NVDA\" }\n}" },
+            { "name": "Unauthorized", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/cms/stocks" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }
+          ]
+        },
+        {
+          "name": "Update Stock Price",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": "{{gatewayBaseUrl}}/cms/stocks/{{stockId}}/price",
+            "body": { "mode": "raw", "raw": "{\n  \"currentPrice\": 190.25\n}" }
+          },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "PATCH", "url": "{{gatewayBaseUrl}}/cms/stocks/{{stockId}}/price" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"currentPrice\": 190.25 }\n}" },
+            { "name": "Forbidden", "originalRequest": { "method": "PATCH", "url": "{{gatewayBaseUrl}}/cms/stocks/{{stockId}}/price" }, "status": "Forbidden", "code": 403, "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden resource\"\n}" }
+          ]
+        },
+        {
+          "name": "Price History",
+          "request": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks/{{stockId}}/history" },
+          "response": [
+            { "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks/{{stockId}}/history" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"price\": 190.25, \"recordedAt\": \"2026-05-07T00:00:00.000Z\" }]\n}" },
+            { "name": "Invalid ObjectId", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks/not-an-id/history" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": \"Invalid MongoDB ObjectId\"\n}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        { "name": "My Profile", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }], "url": "{{gatewayBaseUrl}}/members/me" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/members/me" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"email\": \"adam@example.com\", \"passwordHash\": null }\n}" }, { "name": "Unauthorized", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/members/me" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }] },
+        { "name": "CMS List Members", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/cms/members" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/cms/members" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"email\": \"adam@example.com\" }]\n}" }, { "name": "Forbidden", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/cms/members" }, "status": "Forbidden", "code": 403, "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden resource\"\n}" }] },
+        { "name": "Review Identity", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{gatewayBaseUrl}}/cms/members/{{memberId}}/identity", "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\"\n}" } }, "response": [{ "name": "Success", "originalRequest": { "method": "PATCH", "url": "{{gatewayBaseUrl}}/cms/members/{{memberId}}/identity" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"identityVerificationStatus\": \"approved\" }\n}" }, { "name": "Invalid Review", "originalRequest": { "method": "PATCH", "url": "{{gatewayBaseUrl}}/cms/members/{{memberId}}/identity" }, "status": "Forbidden", "code": 403, "body": "{\n  \"success\": false,\n  \"message\": \"Identity review must approve or reject\"\n}" }] }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        { "name": "Get Wallet", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }], "url": "{{gatewayBaseUrl}}/wallet" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/wallet" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"balance\": 2500 }\n}" }, { "name": "Unauthorized", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/wallet" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }] },
+        { "name": "Deposit", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{gatewayBaseUrl}}/wallet/deposit", "body": { "mode": "raw", "raw": "{\n  \"amount\": 1000\n}" } }, "response": [{ "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/wallet/deposit" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": { \"balance\": 3500 }\n}" }, { "name": "Validation Error", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/wallet/deposit" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": [\"amount must not be less than 1\"]\n}" }] },
+        { "name": "Transactions", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }], "url": "{{gatewayBaseUrl}}/wallet/transactions?type=deposit&from=2026-05-01&to=2026-05-31" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/wallet/transactions" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"type\": \"deposit\", \"amount\": 1000 }]\n}" }, { "name": "Invalid Token", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/wallet/transactions" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Invalid bearer token\"\n}" }] }
+      ]
+    },
+    {
+      "name": "Orders And Portfolio",
+      "item": [
+        { "name": "Buy Order", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{gatewayBaseUrl}}/orders/buy", "body": { "mode": "raw", "raw": "{\n  \"stockId\": \"{{stockId}}\",\n  \"quantity\": 1\n}" } }, "response": [{ "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/orders/buy" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": { \"type\": \"buy\", \"quantity\": 1 }\n}" }, { "name": "Insufficient Balance", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/orders/buy" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": \"Insufficient wallet balance\"\n}" }] },
+        { "name": "Sell Order", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{gatewayBaseUrl}}/orders/sell", "body": { "mode": "raw", "raw": "{\n  \"stockId\": \"{{stockId}}\",\n  \"quantity\": 1\n}" } }, "response": [{ "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/orders/sell" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": { \"type\": \"sell\", \"realizedProfitLoss\": 10.25 }\n}" }, { "name": "Insufficient Shares", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/orders/sell" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": \"Insufficient shares for sell order\"\n}" }] },
+        { "name": "Portfolio", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }], "url": "{{gatewayBaseUrl}}/portfolio" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/portfolio" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"totalMarketValue\": 1743.65, \"holdings\": [] }\n}" }, { "name": "Unauthorized", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/portfolio" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }] }
+      ]
+    },
+    {
+      "name": "Withdrawals",
+      "item": [
+        { "name": "Create Withdrawal", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{gatewayBaseUrl}}/wallet/withdrawals", "body": { "mode": "raw", "raw": "{\n  \"amount\": 250\n}" } }, "response": [{ "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/wallet/withdrawals" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": { \"status\": \"pending\", \"amount\": 250 }\n}" }, { "name": "Holding Period", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/wallet/withdrawals" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": \"Withdrawals are only available 48 hours after the most recent deposit\"\n}" }] },
+        { "name": "Approve Withdrawal", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/cms/withdrawals/{{withdrawalId}}/approve" }, "response": [{ "name": "Success", "originalRequest": { "method": "PATCH", "url": "{{gatewayBaseUrl}}/cms/withdrawals/{{withdrawalId}}/approve" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"status\": \"approved\" }\n}" }, { "name": "Already Reviewed", "originalRequest": { "method": "PATCH", "url": "{{gatewayBaseUrl}}/cms/withdrawals/{{withdrawalId}}/approve" }, "status": "Conflict", "code": 409, "body": "{\n  \"success\": false,\n  \"message\": \"Withdrawal request has already been reviewed\"\n}" }] }
+      ]
+    },
+    {
+      "name": "Price Alerts",
+      "item": [
+        { "name": "Create Price Alert", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{gatewayBaseUrl}}/price-alerts", "body": { "mode": "raw", "raw": "{\n  \"stockId\": \"{{stockId}}\",\n  \"targetPrice\": 190,\n  \"direction\": \"above\"\n}" } }, "response": [{ "name": "Success", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/price-alerts" }, "status": "Created", "code": 201, "body": "{\n  \"success\": true,\n  \"data\": { \"ticker\": \"AAPL\", \"targetPrice\": 190 }\n}" }, { "name": "Unauthorized", "originalRequest": { "method": "POST", "url": "{{gatewayBaseUrl}}/price-alerts" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }] },
+        { "name": "List Price Alerts", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{memberAccessToken}}" }], "url": "{{gatewayBaseUrl}}/price-alerts" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/price-alerts" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"ticker\": \"AAPL\", \"isActive\": true }]\n}" }, { "name": "Invalid Token", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/price-alerts" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Invalid bearer token\"\n}" }] }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        { "name": "Trading Volume", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/analytics/volume?stock_id={{stockId}}&granularity=day&from=2026-05-01&to=2026-05-31" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/volume" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"date\": \"2026-05-03\", \"sharesTraded\": 5, \"totalValue\": 900 }]\n}" }, { "name": "Invalid Query", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/volume" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": [\"granularity must be one of the following values: day, month\"]\n}" }] },
+        { "name": "Top Traded Stocks", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/analytics/stocks/top?limit=5&page=1" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/stocks/top" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"page\": 1, \"limit\": 5, \"data\": [] }\n}" }, { "name": "Forbidden", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/stocks/top" }, "status": "Forbidden", "code": 403, "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden resource\"\n}" }] },
+        { "name": "AUM", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/analytics/aum" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/aum" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": { \"totalAum\": 4243.65 }\n}" }, { "name": "Unauthorized", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/aum" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }] },
+        { "name": "Active Members", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/analytics/members/active?days=30&limit=10" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/members/active" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"displayName\": \"Adam Haddad\", \"tradeCount\": 2 }]\n}" }, { "name": "Validation Error", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/members/active?days=0" }, "status": "Bad Request", "code": 400, "body": "{\n  \"success\": false,\n  \"message\": [\"days must not be less than 1\"]\n}" }] },
+        { "name": "Sector Allocation", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{cmsAccessToken}}" }], "url": "{{gatewayBaseUrl}}/analytics/sectors" }, "response": [{ "name": "Success", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/sectors" }, "status": "OK", "code": 200, "body": "{\n  \"success\": true,\n  \"data\": [{ \"sector\": \"Technology\", \"totalCurrentValue\": 1743.65, \"percentageOfAum\": 41.09 }]\n}" }, { "name": "Forbidden", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/analytics/sectors" }, "status": "Forbidden", "code": 403, "body": "{\n  \"success\": false,\n  \"message\": \"Forbidden resource\"\n}" }] }
+      ]
+    },
+    {
+      "name": "Gateway",
+      "item": [
+        { "name": "Protected Route Without Token", "request": { "method": "GET", "url": "{{gatewayBaseUrl}}/wallet" }, "response": [{ "name": "Unauthorized", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/wallet" }, "status": "Unauthorized", "code": 401, "body": "{\n  \"statusCode\": 401,\n  \"message\": \"Missing bearer token\"\n}" }, { "name": "Rate Limited", "originalRequest": { "method": "GET", "url": "{{gatewayBaseUrl}}/stocks" }, "status": "Too Many Requests", "code": 429, "body": "{\n  \"statusCode\": 429,\n  \"message\": \"Rate limit exceeded\"\n}" }] }
+      ]
+    }
+  ]
+}
