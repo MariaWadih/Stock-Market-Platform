@@ -42,6 +42,21 @@ export class WalletController {
     return this.walletService.createDepositCheckout(user, dto);
   }
 
+  @Get('wallet/deposit/success')
+  getDepositSuccess() {
+    return {
+      message:
+        'Deposit payment completed. Your wallet will update once the payment confirmation is processed.',
+    };
+  }
+
+  @Get('wallet/deposit/cancel')
+  getDepositCancel() {
+    return {
+      message: 'Deposit payment was cancelled. Your wallet was not charged.',
+    };
+  }
+
   @Post('wallet/deposit/webhook')
   handleDepositWebhook(
     @Req() request: RawBodyRequest<Request>,
