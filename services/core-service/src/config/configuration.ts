@@ -21,6 +21,15 @@ export default () => ({
     refreshSecret: process.env.JWT_REFRESH_SECRET,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
+  cms: {
+    adminEmail: process.env.CMS_ADMIN_EMAIL,
+    adminPassword: process.env.CMS_ADMIN_PASSWORD,
+    adminFullName: process.env.CMS_ADMIN_FULL_NAME,
+  },
+  throttling: {
+    ttl: parseInt(process.env.AUTH_THROTTLE_TTL_MS ?? '60000', 10),
+    limit: parseInt(process.env.AUTH_THROTTLE_LIMIT ?? '10', 10),
+  },
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
