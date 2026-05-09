@@ -4,6 +4,7 @@ Backend assignment implementation using two NestJS services:
 
 - `services/core-service`: main API on port `3000`
 - `services/notification-service`: notification worker/API on port `3001`
+- `services/api-gateway`: edge gateway on port `8080`
 
 Local infrastructure expected:
 
@@ -37,8 +38,17 @@ cd services/notification-service
 npm run start:dev
 ```
 
+Start the API gateway:
+
+```bash
+cd services/api-gateway
+npm run start:dev
+```
+
 ## Services
 
 The core service owns authentication, members, CMS users, stocks, wallet, orders, portfolio, analytics, price alerts, Stripe integration, and event publishing.
 
 The notification service consumes RabbitMQ notification events and sends transactional emails.
+
+The API gateway verifies JWTs, rate-limits requests, validates JSON request bodies, logs traffic, and forwards requests to the core or notification service.

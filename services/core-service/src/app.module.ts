@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -27,12 +28,19 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => [
-        {
-          ttl: configService.getOrThrow<number>('throttling.ttl'),
-          limit: configService.getOrThrow<number>('throttling.limit'),
-        },
-      ],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            name: 'default',
+            ttl: configService.getOrThrow<number>('throttling.ttl'),
+            limit: configService.getOrThrow<number>('throttling.limit'),
+          },
+        ],
+        storage: new ThrottlerStorageRedisService({
+          host: configService.getOrThrow<string>('redis.host'),
+          port: configService.getOrThrow<number>('redis.port'),
+        }),
+      }),
     }),
     DatabaseModule,
     AuthModule,
