@@ -9,12 +9,10 @@ import {
 import { Stock, StockDocument } from '../stocks/schemas/stock.schema';
 import { Wallet, WalletDocument } from '../wallet/schemas/wallet.schema';
 import { Order, OrderDocument } from '../orders/schemas/order.schema';
+import { roundMoney } from '../common/utils/money.util';
 import { ActiveMembersQueryDto } from './dto/active-members-query.dto';
 import { AnalyticsPaginationQueryDto } from './dto/analytics-pagination-query.dto';
-import {
-  AnalyticsGranularity,
-  TradingVolumeQueryDto,
-} from './dto/trading-volume-query.dto';
+import { AnalyticsGranularity } from './dto/trading-volume-query.dto';
 
 export interface TradingVolumeResult {
   date: string;
@@ -51,6 +49,13 @@ interface SectorAllocationAggregationResult {
   totalCurrentValue: number;
 }
 
+interface TradingVolumeQuery {
+  stock_id: string;
+  granularity: AnalyticsGranularity;
+  from: Date;
+  to: Date;
+}
+
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -67,7 +72,7 @@ export class AnalyticsService {
   ) {}
 
   async getTradingVolume(
-    query: TradingVolumeQueryDto,
+    query: TradingVolumeQuery,
   ): Promise<TradingVolumeResult[]> {
     const dateRange = this.parseDateRange(query.from, query.to);
     const dateFormat =
@@ -163,7 +168,7 @@ export class AnalyticsService {
       .aggregate<AumAggregationResult>(this.buildAumPipeline())
       .exec();
 
-    return { totalAum: this.roundMoney(result?.totalAum ?? 0) };
+    return { totalAum: roundMoney(result?.totalAum ?? 0) };
   }
 
   async getMostActiveMembers(
@@ -245,7 +250,7 @@ export class AnalyticsService {
       ...sector,
       percentageOfAum:
         totalAum > 0
-          ? this.roundMoney((sector.totalCurrentValue / totalAum) * 100)
+          ? roundMoney((sector.totalCurrentValue / totalAum) * 100)
           : 0,
     }));
   }
@@ -294,18 +299,11 @@ export class AnalyticsService {
     ];
   }
 
-  private parseDateRange(from: string, to: string) {
-    const start = new Date(from);
-    const end = new Date(to);
-
-    if (start > end) {
+  private parseDateRange(from: Date, to: Date) {
+    if (from > to) {
       throw new BadRequestException('from must be before or equal to to');
     }
 
-    return { $gte: start, $lte: end };
-  }
-
-  private roundMoney(value: number): number {
-    return Math.round(value * 100) / 100;
+    return { $gte: from, $lte: to };
   }
 }

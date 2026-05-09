@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
+import { roundMoney } from '../common/utils/money.util';
 import { Stock, StockDocument } from '../stocks/schemas/stock.schema';
 import {
   PortfolioPosition,
@@ -43,8 +44,8 @@ export class PortfolioService {
     const holdings = positions.map((position) => {
       const stock = stockById.get(position.stockId.toString());
       const currentPrice = stock?.currentPrice ?? position.averagePrice;
-      const marketValue = this.roundMoney(position.quantity * currentPrice);
-      const unrealizedProfitLoss = this.roundMoney(
+      const marketValue = roundMoney(position.quantity * currentPrice);
+      const unrealizedProfitLoss = roundMoney(
         (currentPrice - position.averagePrice) * position.quantity,
       );
 
@@ -61,14 +62,10 @@ export class PortfolioService {
         unrealizedProfitLoss,
       };
     });
-    const totalMarketValue = this.roundMoney(
+    const totalMarketValue = roundMoney(
       holdings.reduce((sum, holding) => sum + holding.marketValue, 0),
     );
 
     return { totalMarketValue, holdings };
-  }
-
-  private roundMoney(value: number): number {
-    return Math.round(value * 100) / 100;
   }
 }
