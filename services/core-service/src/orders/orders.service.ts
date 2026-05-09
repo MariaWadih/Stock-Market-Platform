@@ -11,6 +11,9 @@ import { TransactionStatus } from '../common/enums/transaction-status.enum';
 import { TransactionType } from '../common/enums/transaction-type.enum';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { roundMoney } from '../common/utils/money.util';
+import { Member, MemberDocument } from '../members/schemas/member.schema';
+import { NotificationEventType } from '../notifications/notification-event';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   PortfolioPosition,
   PortfolioPositionDocument,
@@ -37,6 +40,9 @@ export class OrdersService {
     private readonly walletTransactionModel: Model<WalletTransactionDocument>,
     @InjectModel(Stock.name)
     private readonly stockModel: Model<StockDocument>,
+    @InjectModel(Member.name)
+    private readonly memberModel: Model<MemberDocument>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async buy(user: AuthenticatedUser, dto: CreateOrderDto) {
@@ -82,6 +88,13 @@ export class OrdersService {
       stockId: stock._id,
       orderId: order._id,
       description: `Bought ${dto.quantity} shares of ${stock.ticker}`,
+    });
+    await this.publishTradeExecuted(memberId, {
+      side: 'buy',
+      ticker: stock.ticker,
+      quantity: dto.quantity,
+      price: stock.currentPrice,
+      totalValue,
     });
 
     return order;
@@ -145,6 +158,14 @@ export class OrdersService {
       orderId: order._id,
       description: `Sold ${dto.quantity} shares of ${stock.ticker}`,
     });
+    await this.publishTradeExecuted(memberId, {
+      side: 'sell',
+      ticker: stock.ticker,
+      quantity: dto.quantity,
+      price: stock.currentPrice,
+      totalValue,
+      realizedProfitLoss,
+    });
 
     return order;
   }
@@ -206,5 +227,33 @@ export class OrdersService {
     if (user.type !== 'member') {
       throw new ForbiddenException('Only members can place orders');
     }
+  }
+
+  private async publishTradeExecuted(
+    memberId: Types.ObjectId,
+    trade: {
+      side: 'buy' | 'sell';
+      ticker: string;
+      quantity: number;
+      price: number;
+      totalValue: number;
+      realizedProfitLoss?: number;
+    },
+  ): Promise<void> {
+    const member = await this.memberModel
+      .findById(memberId)
+      .select('email fullName')
+      .orFail(() => new NotFoundException('Member not found'))
+      .exec();
+
+    await this.notificationsService.publish({
+      type: NotificationEventType.TradeExecuted,
+      occurredAt: new Date().toISOString(),
+      payload: {
+        email: member.email,
+        fullName: member.fullName,
+        ...trade,
+      },
+    });
   }
 }

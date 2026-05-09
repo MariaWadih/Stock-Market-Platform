@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { validateEnvironment } from './config/env.validation';
       load: [configuration],
       validate: validateEnvironment,
     }),
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

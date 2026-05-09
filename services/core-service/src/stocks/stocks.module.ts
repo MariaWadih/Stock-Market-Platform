@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Member, MemberSchema } from '../members/schemas/member.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 import {
   PriceAlert,
   PriceAlertSchema,
@@ -14,7 +16,9 @@ import { StocksService } from './stocks.service';
 
 @Module({
   imports: [
+    NotificationsModule,
     MongooseModule.forFeature([
+      { name: Member.name, schema: MemberSchema },
       { name: Stock.name, schema: StockSchema },
       { name: PriceHistory.name, schema: PriceHistorySchema },
       { name: PriceAlert.name, schema: PriceAlertSchema },

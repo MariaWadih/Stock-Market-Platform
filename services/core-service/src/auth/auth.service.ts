@@ -14,6 +14,8 @@ import { MemberStatus } from '../common/enums/member-status.enum';
 import { OtpPurpose } from '../common/enums/otp-purpose.enum';
 import { AuthenticatedUser } from '../common/types/authenticated-user';
 import { Member, MemberDocument } from '../members/schemas/member.schema';
+import { NotificationEventType } from '../notifications/notification-event';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterMemberDto } from './dto/register-member.dto';
@@ -35,6 +37,7 @@ export class AuthService {
     @InjectModel(Otp.name)
     private readonly otpModel: Model<OtpDocument>,
     private readonly jwtService: JwtService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async registerMember(dto: RegisterMemberDto): Promise<{ message: string }> {
@@ -187,7 +190,15 @@ export class AuthService {
       memberId,
     });
 
-    // The messaging branch will publish auth.otp.created from here.
+    await this.notificationsService.publish({
+      type: NotificationEventType.OtpCreated,
+      occurredAt: new Date().toISOString(),
+      payload: {
+        email,
+        code,
+        expiresInMinutes: OTP_TTL_MINUTES,
+      },
+    });
   }
 
   private assertAdult(dateOfBirth: Date): void {

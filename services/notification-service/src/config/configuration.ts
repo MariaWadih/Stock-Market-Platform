@@ -6,7 +6,8 @@ export default () => ({
       process.env.RABBITMQ_NOTIFICATIONS_EXCHANGE ?? 'notifications',
   },
   email: {
-    sendgridApiKey: process.env.SENDGRID_API_KEY,
+    gmailUser: process.env.GMAIL_USER,
+    gmailAppPassword: process.env.GMAIL_APP_PASSWORD,
     from: process.env.EMAIL_FROM,
   },
 });

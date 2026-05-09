@@ -11,6 +11,7 @@ Local infrastructure expected:
 - MongoDB on `localhost:27017`
 - Redis on `localhost:6379`
 - RabbitMQ on `localhost:5672`
+- Gmail account with an app password for transactional email delivery
 
 ## Run Locally
 
@@ -50,5 +51,7 @@ npm run start:dev
 The core service owns authentication, members, CMS users, stocks, wallet, orders, portfolio, analytics, price alerts, Stripe integration, and event publishing.
 
 The notification service consumes RabbitMQ notification events and sends transactional emails.
+
+Notification emails are sent through Gmail SMTP for OTP delivery, wallet credits, trade execution confirmations, price alerts, and CMS account provisioning. Set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `EMAIL_FROM` before running the notification service.
 
 The API gateway verifies JWTs, rate-limits requests, validates JSON request bodies, logs traffic, and forwards requests to the core or notification service.

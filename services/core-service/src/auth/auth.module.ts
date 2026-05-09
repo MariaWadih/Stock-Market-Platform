@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 import type { SignOptions } from 'jsonwebtoken';
 import { CmsUser, CmsUserSchema } from '../cms-users/schemas/cms-user.schema';
 import { Member, MemberSchema } from '../members/schemas/member.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Otp, OtpSchema } from './schemas/otp.schema';
@@ -14,6 +15,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 @Module({
   imports: [
     PassportModule,
+    NotificationsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

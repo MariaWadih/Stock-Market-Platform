@@ -5,6 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Member, MemberDocument } from '../members/schemas/member.schema';
+import { NotificationEventType } from '../notifications/notification-event';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   PriceAlert,
   PriceAlertDocument,
@@ -27,6 +30,9 @@ export class StocksService {
     private readonly priceHistoryModel: Model<PriceHistoryDocument>,
     @InjectModel(PriceAlert.name)
     private readonly priceAlertModel: Model<PriceAlertDocument>,
+    @InjectModel(Member.name)
+    private readonly memberModel: Model<MemberDocument>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createStock(dto: CreateStockDto) {
@@ -201,12 +207,20 @@ export class StocksService {
     const minPrice = Math.min(previousPrice, currentPrice);
     const maxPrice = Math.max(previousPrice, currentPrice);
 
-    await this.priceAlertModel.updateMany(
-      {
+    const alerts = await this.priceAlertModel
+      .find({
         stockId,
         isTriggered: false,
         thresholdPrice: { $gte: minPrice, $lte: maxPrice },
-      },
+      })
+      .exec();
+
+    if (alerts.length === 0) {
+      return;
+    }
+
+    await this.priceAlertModel.updateMany(
+      { _id: { $in: alerts.map((alert) => alert._id) } },
       {
         $set: {
           isTriggered: true,
@@ -214,6 +228,36 @@ export class StocksService {
           ticker,
         },
       },
+    );
+
+    const members = await this.memberModel
+      .find({ _id: { $in: alerts.map((alert) => alert.memberId) } })
+      .select('email fullName')
+      .exec();
+    const memberById = new Map(
+      members.map((member) => [member._id.toString(), member]),
+    );
+
+    await Promise.all(
+      alerts.map(async (alert) => {
+        const member = memberById.get(alert.memberId.toString());
+
+        if (!member) {
+          return;
+        }
+
+        await this.notificationsService.publish({
+          type: NotificationEventType.PriceAlertTriggered,
+          occurredAt: new Date().toISOString(),
+          payload: {
+            email: member.email,
+            fullName: member.fullName,
+            ticker,
+            thresholdPrice: alert.thresholdPrice,
+            currentPrice,
+          },
+        });
+      }),
     );
   }
 
