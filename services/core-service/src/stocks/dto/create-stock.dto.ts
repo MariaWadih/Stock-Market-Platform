@@ -28,6 +28,21 @@ export class CreateStockDto {
   @IsNotEmpty()
   description!: string;
 
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  marketCap?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  peRatio?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  dividendYield?: number;
+
   @IsBoolean()
   @IsOptional()
   isListed?: boolean;

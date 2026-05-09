@@ -7,7 +7,7 @@ import { RequestLoggingInterceptor } from './common/interceptors/request-logging
 import { ResponseTransformInterceptor } from './common/interceptors/response-transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(
     new RequestLoggingInterceptor(),

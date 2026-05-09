@@ -48,10 +48,12 @@ npm run start:dev
 
 ## Services
 
-The core service owns authentication, members, CMS users, stocks, wallet, orders, portfolio, analytics, price alerts, Stripe integration, and event publishing.
+The core service owns authentication, members, CMS users, stocks, wallet, orders, portfolio, analytics, price alerts, Stripe integration, scheduled integrity checks, and event publishing.
 
 The notification service consumes RabbitMQ notification events and sends transactional emails.
 
 Notification emails are sent through Gmail SMTP for OTP delivery, wallet credits, trade execution confirmations, price alerts, and CMS account provisioning. Set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `EMAIL_FROM` before running the notification service.
+
+Wallet deposits use Stripe Checkout. Members create a checkout session through `/wallet/deposit/checkout`, and balances are credited only after the signed Stripe webhook confirms a paid checkout session.
 
 The API gateway verifies JWTs, rate-limits requests, validates JSON request bodies, logs traffic, and forwards requests to the core or notification service.

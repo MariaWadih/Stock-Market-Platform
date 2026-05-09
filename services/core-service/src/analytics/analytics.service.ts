@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron } from '@nestjs/schedule';
 import { Model, PipelineStage, Types } from 'mongoose';
 import { Member, MemberDocument } from '../members/schemas/member.schema';
 import {
@@ -10,9 +11,18 @@ import { Stock, StockDocument } from '../stocks/schemas/stock.schema';
 import { Wallet, WalletDocument } from '../wallet/schemas/wallet.schema';
 import { Order, OrderDocument } from '../orders/schemas/order.schema';
 import { roundMoney } from '../common/utils/money.util';
+import { WithdrawalStatus } from '../common/enums/withdrawal-status.enum';
+import {
+  WithdrawalRequest,
+  WithdrawalRequestDocument,
+} from '../withdrawals/schemas/withdrawal-request.schema';
 import { ActiveMembersQueryDto } from './dto/active-members-query.dto';
 import { AnalyticsPaginationQueryDto } from './dto/analytics-pagination-query.dto';
 import { AnalyticsGranularity } from './dto/trading-volume-query.dto';
+import {
+  NegativeWalletAlert,
+  NegativeWalletAlertDocument,
+} from './schemas/negative-wallet-alert.schema';
 
 export interface TradingVolumeResult {
   date: string;
@@ -69,6 +79,10 @@ export class AnalyticsService {
     private readonly stockModel: Model<StockDocument>,
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
+    @InjectModel(WithdrawalRequest.name)
+    private readonly withdrawalRequestModel: Model<WithdrawalRequestDocument>,
+    @InjectModel(NegativeWalletAlert.name)
+    private readonly negativeWalletAlertModel: Model<NegativeWalletAlertDocument>,
   ) {}
 
   async getTradingVolume(
@@ -253,6 +267,102 @@ export class AnalyticsService {
           ? roundMoney((sector.totalCurrentValue / totalAum) * 100)
           : 0,
     }));
+  }
+
+  async getAdministratorSummary() {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
+    const [
+      totalRegisteredMembers,
+      currentMonthMembers,
+      previousMonthMembers,
+      pendingWithdrawals,
+      negativeWalletAlerts,
+    ] = await Promise.all([
+      this.memberModel.countDocuments(),
+      this.memberModel.countDocuments({
+        createdAt: { $gte: currentMonthStart },
+      }),
+      this.memberModel.countDocuments({
+        createdAt: { $gte: previousMonthStart, $lt: currentMonthStart },
+      }),
+      this.withdrawalRequestModel.countDocuments({
+        status: WithdrawalStatus.Pending,
+      }),
+      this.getNegativeWalletAlerts(),
+    ]);
+
+    return {
+      totalRegisteredMembers,
+      monthOverMonthGrowthRate:
+        previousMonthMembers > 0
+          ? roundMoney(
+              ((currentMonthMembers - previousMonthMembers) /
+                previousMonthMembers) *
+                100,
+            )
+          : currentMonthMembers > 0
+            ? 100
+            : 0,
+      currentMonthMembers,
+      previousMonthMembers,
+      pendingWithdrawalRequests: pendingWithdrawals,
+      negativeWalletAlertCount: negativeWalletAlerts.length,
+      negativeWalletAlerts,
+    };
+  }
+
+  async getNegativeWalletAlerts() {
+    const alerts = await this.negativeWalletAlertModel
+      .find({ isActive: true })
+      .sort({ balance: 1, detectedAt: -1 })
+      .lean();
+    const memberIds = alerts.map((alert) => alert.memberId);
+    const members = await this.memberModel
+      .find({ _id: { $in: memberIds } })
+      .select('fullName email status')
+      .lean();
+    const memberById = new Map(
+      members.map((member) => [member._id.toString(), member]),
+    );
+
+    return alerts.map((alert) => ({
+      ...alert,
+      member: memberById.get(alert.memberId.toString()),
+    }));
+  }
+
+  @Cron('0 0 * * *')
+  async refreshNegativeWalletAlerts(): Promise<void> {
+    const detectedAt = new Date();
+    const negativeWallets = await this.walletModel
+      .find({ balance: { $lt: 0 } })
+      .select('_id memberId balance')
+      .lean();
+
+    await this.negativeWalletAlertModel.updateMany(
+      { isActive: true },
+      { $set: { isActive: false } },
+    );
+
+    if (negativeWallets.length === 0) {
+      return;
+    }
+
+    await this.negativeWalletAlertModel.insertMany(
+      negativeWallets.map((wallet) => ({
+        memberId: wallet.memberId,
+        walletId: wallet._id,
+        balance: wallet.balance,
+        detectedAt,
+        isActive: true,
+      })),
+    );
   }
 
   private buildAumPipeline(): PipelineStage[] {

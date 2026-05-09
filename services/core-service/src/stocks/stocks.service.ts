@@ -111,6 +111,11 @@ export class StocksService {
     if (dto.companyName !== undefined) update.companyName = dto.companyName;
     if (dto.sector !== undefined) update.sector = dto.sector.trim();
     if (dto.description !== undefined) update.description = dto.description;
+    if (dto.marketCap !== undefined) update.marketCap = dto.marketCap;
+    if (dto.peRatio !== undefined) update.peRatio = dto.peRatio;
+    if (dto.dividendYield !== undefined) {
+      update.dividendYield = dto.dividendYield;
+    }
     if (dto.isListed !== undefined) update.isListed = dto.isListed;
 
     const priceChanged =

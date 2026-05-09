@@ -1,4 +1,4 @@
-import { IsMongoId, IsNumber, Min } from 'class-validator';
+import { IsIn, IsMongoId, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreatePriceAlertDto {
   @IsMongoId()
@@ -6,5 +6,15 @@ export class CreatePriceAlertDto {
 
   @IsNumber()
   @Min(0)
-  thresholdPrice!: number;
+  @IsOptional()
+  thresholdPrice?: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  targetPrice?: number;
+
+  @IsIn(['above', 'below'])
+  @IsOptional()
+  direction?: 'above' | 'below';
 }

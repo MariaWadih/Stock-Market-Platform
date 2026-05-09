@@ -16,6 +16,9 @@ export class NotificationsConsumer implements OnModuleInit, OnModuleDestroy {
   private channel?: Channel;
   private readonly exchange: string;
   private readonly queue = 'notification-service.email';
+  private readonly reconnectDelayMs = 5000;
+  private reconnectTimer?: NodeJS.Timeout;
+  private isShuttingDown = false;
 
   constructor(
     private readonly configService: ConfigService,
@@ -27,26 +30,77 @@ export class NotificationsConsumer implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit(): Promise<void> {
-    this.connection = await connect(
-      this.configService.getOrThrow<string>('rabbitmq.url'),
-    );
-    this.channel = await this.connection.createChannel();
-    await this.channel.assertExchange(this.exchange, 'topic', {
-      durable: true,
-    });
-    await this.channel.assertQueue(this.queue, { durable: true });
-    await this.channel.bindQueue(this.queue, this.exchange, '#');
-    await this.channel.prefetch(5);
-    await this.channel.consume(this.queue, (message) => {
-      void this.handleMessage(message);
-    });
-
-    this.logger.log(`Consuming notification events from ${this.queue}`);
+    await this.connectAndConsume();
   }
 
   async onModuleDestroy(): Promise<void> {
+    this.isShuttingDown = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+
     await this.channel?.close().catch(() => undefined);
     await this.connection?.close().catch(() => undefined);
+  }
+
+  private async connectAndConsume(): Promise<void> {
+    try {
+      const connection = await connect(
+        this.configService.getOrThrow<string>('rabbitmq.url'),
+      );
+      const channel = await connection.createChannel();
+
+      this.connection = connection;
+      this.channel = channel;
+
+      connection.on('error', (error) => {
+        this.logger.error('RabbitMQ connection error', error);
+      });
+      connection.on('close', () => {
+        this.logger.warn('RabbitMQ connection closed');
+        this.channel = undefined;
+        this.connection = undefined;
+        this.scheduleReconnect();
+      });
+      channel.on('error', (error) => {
+        this.logger.error('RabbitMQ channel error', error);
+      });
+      channel.on('close', () => {
+        this.logger.warn('RabbitMQ channel closed');
+        this.channel = undefined;
+      });
+
+      await channel.assertExchange(this.exchange, 'topic', {
+        durable: true,
+      });
+      await channel.assertQueue(this.queue, { durable: true });
+      await channel.bindQueue(this.queue, this.exchange, '#');
+      await channel.prefetch(5);
+      await channel.consume(this.queue, (message) => {
+        void this.handleMessage(message);
+      });
+
+      this.logger.log(`Consuming notification events from ${this.queue}`);
+    } catch (error) {
+      this.logger.error('Failed to connect to RabbitMQ', error);
+      this.channel = undefined;
+      this.connection = undefined;
+      this.scheduleReconnect();
+    }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.isShuttingDown || this.reconnectTimer) {
+      return;
+    }
+
+    this.logger.warn(
+      `Retrying RabbitMQ connection in ${this.reconnectDelayMs}ms`,
+    );
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      void this.connectAndConsume();
+    }, this.reconnectDelayMs);
   }
 
   private async handleMessage(message: ConsumeMessage | null): Promise<void> {

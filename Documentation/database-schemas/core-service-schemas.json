@@ -14,6 +14,9 @@
         "identityVerificationStatus": "pending | approved | rejected, default pending",
         "status": "active | suspended, default active",
         "suspensionReason": "string, optional",
+        "phoneNumber": "string, optional",
+        "address": "string, optional",
+        "profileCompletedAt": "date, optional",
         "createdAt": "date, managed by Mongoose",
         "updatedAt": "date, managed by Mongoose"
       },
@@ -76,7 +79,7 @@
       "description": "Member wallet balances.",
       "fields": {
         "memberId": "ObjectId ref Member, required, unique",
-        "balance": "number, required, min 0, default 0",
+        "balance": "number, required, default 0",
         "lastDepositAt": "date, optional",
         "createdAt": "date",
         "updatedAt": "date"
@@ -87,12 +90,12 @@
       ]
     },
     "wallettransactions": {
-      "description": "Ledger of deposits, withdrawals, buys, and sells.",
+      "description": "Ledger of deposits, withdrawals, buys, sells, and manual wallet adjustments.",
       "fields": {
         "memberId": "ObjectId ref Member, required",
         "walletId": "ObjectId ref Wallet, required",
-        "type": "deposit | withdrawal | buy | sell, required",
-        "status": "pending | completed | failed, required",
+        "type": "deposit | withdrawal | buy | sell | manual_adjustment, required",
+        "status": "pending | completed | rejected, required",
         "amount": "number, required, min 0",
         "description": "string, optional",
         "stockId": "ObjectId ref Stock, optional",
@@ -105,6 +108,40 @@
         { "memberId": 1, "createdAt": -1 },
         { "memberId": 1, "type": 1, "createdAt": -1 },
         { "type": 1, "status": 1, "createdAt": -1 }
+      ]
+    },
+    "walletadjustmentaudits": {
+      "description": "Audit trail for administrator wallet balance adjustments.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "walletId": "ObjectId ref Wallet, required",
+        "adjustedBy": "ObjectId ref CmsUser, required",
+        "previousBalance": "number, required",
+        "adjustmentAmount": "number, required, signed",
+        "newBalance": "number, required",
+        "justification": "string, required",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "createdAt": -1 },
+        { "adjustedBy": 1, "createdAt": -1 }
+      ]
+    },
+    "memberstatusaudits": {
+      "description": "Audit trail for member suspension and reinstatement actions.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "changedBy": "ObjectId ref CmsUser, required",
+        "fromStatus": "active | suspended, required",
+        "toStatus": "active | suspended, required",
+        "reason": "string, required",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "memberId": 1, "createdAt": -1 },
+        { "changedBy": 1, "createdAt": -1 }
       ]
     },
     "orders": {
@@ -170,13 +207,28 @@
         "memberId": "ObjectId ref Member, required",
         "stockId": "ObjectId ref Stock, required",
         "ticker": "string, required",
-        "targetPrice": "number, required, min 0",
-        "direction": "above | below, required",
-        "isActive": "boolean, default true",
+        "thresholdPrice": "number, required, min 0",
+        "isTriggered": "boolean, default false",
         "triggeredAt": "date, optional",
         "createdAt": "date",
         "updatedAt": "date"
       }
+    },
+    "negativewalletalerts": {
+      "description": "Nightly snapshot of wallets with negative balances for CMS dashboard alerts.",
+      "fields": {
+        "memberId": "ObjectId ref Member, required",
+        "walletId": "ObjectId ref Wallet, required",
+        "balance": "number, required",
+        "detectedAt": "date, required",
+        "isActive": "boolean, default true",
+        "createdAt": "date",
+        "updatedAt": "date"
+      },
+      "indexes": [
+        { "isActive": 1, "detectedAt": -1 },
+        { "memberId": 1, "isActive": 1 }
+      ]
     },
     "otps": {
       "description": "Short-lived OTP verification records.",

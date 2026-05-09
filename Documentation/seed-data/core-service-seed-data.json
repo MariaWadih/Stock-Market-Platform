@@ -152,9 +152,8 @@
       "memberId": "665000000000000000000001",
       "stockId": "665000000000000000000201",
       "ticker": "AAPL",
-      "targetPrice": 190,
-      "direction": "above",
-      "isActive": true
+      "thresholdPrice": 190,
+      "isTriggered": false
     }
   ]
 }

@@ -7,6 +7,10 @@ import {
   WalletTransactionSchema,
 } from './schemas/wallet-transaction.schema';
 import { Wallet, WalletSchema } from './schemas/wallet.schema';
+import {
+  WalletAdjustmentAudit,
+  WalletAdjustmentAuditSchema,
+} from './schemas/wallet-adjustment-audit.schema';
 import { WalletController } from './wallet.controller';
 import { WalletService } from './wallet.service';
 
@@ -17,6 +21,10 @@ import { WalletService } from './wallet.service';
       { name: Member.name, schema: MemberSchema },
       { name: Wallet.name, schema: WalletSchema },
       { name: WalletTransaction.name, schema: WalletTransactionSchema },
+      {
+        name: WalletAdjustmentAudit.name,
+        schema: WalletAdjustmentAuditSchema,
+      },
     ]),
   ],
   controllers: [WalletController],

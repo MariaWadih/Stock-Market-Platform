@@ -7,11 +7,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Request, Response as ExpressResponse } from 'express';
+import { Readable } from 'stream';
 import { AuthenticatedUser } from '../common/authenticated-user';
 import { RateLimitService } from './rate-limit.service';
 import { RouteResolverService } from './route-resolver.service';
 
 type RequestBody = string | Record<string, unknown> | unknown[] | undefined;
+type RawBodyRequest = Request & { rawBody?: Buffer };
 
 interface JwtPayload extends AuthenticatedUser {
   iat?: number;
@@ -105,6 +107,10 @@ export class GatewayService {
   }
 
   private validateRequest(request: Request): void {
+    if (request.originalUrl.split('?')[0] === '/wallet/deposit/webhook') {
+      return;
+    }
+
     const methodAllowsBody = ['POST', 'PUT', 'PATCH'].includes(request.method);
     const hasBody = request.body !== undefined && request.body !== null;
 
@@ -192,6 +198,11 @@ export class GatewayService {
       return undefined;
     }
 
+    const rawBody = (request as RawBodyRequest).rawBody;
+    if (rawBody) {
+      return rawBody as unknown as BodyInit;
+    }
+
     const body = request.body as RequestBody;
 
     if (body === undefined) {
@@ -211,6 +222,34 @@ export class GatewayService {
         response.setHeader(name, value);
       }
     });
+
+    if (
+      upstreamResponse.headers
+        .get('content-type')
+        ?.toLowerCase()
+        .includes('text/event-stream')
+    ) {
+      response.flushHeaders();
+
+      const responseBody = upstreamResponse.body;
+
+      if (!responseBody) {
+        response.end();
+        return;
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        const stream = Readable.fromWeb(
+          responseBody as unknown as Parameters<typeof Readable.fromWeb>[0],
+        );
+
+        stream.on('error', reject);
+        response.on('close', resolve);
+        response.on('error', reject);
+        stream.pipe(response);
+      });
+      return;
+    }
 
     const body = Buffer.from(await upstreamResponse.arrayBuffer());
     response.send(body);

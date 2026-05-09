@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
+import {
+  IsDate,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class RegisterMemberDto {
   @IsString()
@@ -16,4 +23,9 @@ export class RegisterMemberDto {
   @Type(() => Date)
   @IsDate()
   dateOfBirth!: Date;
+
+  @IsString()
+  @IsOptional()
+  @Length(4, 32)
+  referralCode?: string;
 }

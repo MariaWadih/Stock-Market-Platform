@@ -33,6 +33,12 @@ export class WalletTransaction {
 
   @Prop({ type: Types.ObjectId, ref: 'WithdrawalRequest' })
   withdrawalRequestId?: Types.ObjectId;
+
+  @Prop({ trim: true })
+  paymentProvider?: string;
+
+  @Prop({ trim: true })
+  providerTransactionId?: string;
 }
 
 export const WalletTransactionSchema =
@@ -41,3 +47,13 @@ export const WalletTransactionSchema =
 WalletTransactionSchema.index({ memberId: 1, createdAt: -1 });
 WalletTransactionSchema.index({ memberId: 1, type: 1, createdAt: -1 });
 WalletTransactionSchema.index({ type: 1, status: 1, createdAt: -1 });
+WalletTransactionSchema.index(
+  { paymentProvider: 1, providerTransactionId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      paymentProvider: { $exists: true },
+      providerTransactionId: { $exists: true },
+    },
+  },
+);

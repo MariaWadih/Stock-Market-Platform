@@ -19,11 +19,20 @@ export class Member {
   @Prop({ required: true })
   dateOfBirth!: Date;
 
+  @Prop({ required: true, uppercase: true, trim: true })
+  referralCode!: string;
+
+  @Prop({ uppercase: true, trim: true })
+  referredByCode?: string;
+
   @Prop()
   passwordHash?: string;
 
   @Prop({ default: false })
   isEmailVerified!: boolean;
+
+  @Prop({ default: false })
+  hasFundedWallet!: boolean;
 
   @Prop({
     enum: IdentityVerificationStatus,
@@ -36,11 +45,22 @@ export class Member {
 
   @Prop()
   suspensionReason?: string;
+
+  @Prop({ trim: true })
+  phoneNumber?: string;
+
+  @Prop({ trim: true })
+  address?: string;
+
+  @Prop()
+  profileCompletedAt?: Date;
 }
 
 export const MemberSchema = SchemaFactory.createForClass(Member);
 
 MemberSchema.index({ email: 1 }, { unique: true });
 MemberSchema.index({ nationalId: 1 }, { unique: true });
+MemberSchema.index({ referralCode: 1 }, { unique: true });
+MemberSchema.index({ referredByCode: 1, createdAt: -1 });
 MemberSchema.index({ status: 1, createdAt: -1 });
 MemberSchema.index({ identityVerificationStatus: 1, createdAt: -1 });

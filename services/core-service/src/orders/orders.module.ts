@@ -4,6 +4,7 @@ import {
   PortfolioPosition,
   PortfolioPositionSchema,
 } from '../portfolio/schemas/portfolio-position.schema';
+import { PortfolioModule } from '../portfolio/portfolio.module';
 import { Member, MemberSchema } from '../members/schemas/member.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { Stock, StockSchema } from '../stocks/schemas/stock.schema';
@@ -19,6 +20,7 @@ import { OrdersService } from './orders.service';
 @Module({
   imports: [
     NotificationsModule,
+    PortfolioModule,
     MongooseModule.forFeature([
       { name: Member.name, schema: MemberSchema },
       { name: Order.name, schema: OrderSchema },

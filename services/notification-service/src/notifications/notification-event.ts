@@ -4,6 +4,7 @@ export enum NotificationEventType {
   TradeExecuted = 'trade.executed',
   PriceAlertTriggered = 'price_alert.triggered',
   CmsUserProvisioned = 'cms_user.provisioned',
+  WithdrawalReviewed = 'withdrawal.reviewed',
 }
 
 interface BaseNotificationEvent<T extends NotificationEventType, P> {
@@ -60,5 +61,16 @@ export type NotificationEvent =
         fullName: string;
         role: string;
         temporaryPassword: string;
+      }
+    >
+  | BaseNotificationEvent<
+      NotificationEventType.WithdrawalReviewed,
+      {
+        email: string;
+        fullName: string;
+        status: 'approved' | 'rejected';
+        amount: number;
+        reason?: string;
+        balance?: number;
       }
     >;
