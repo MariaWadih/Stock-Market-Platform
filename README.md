@@ -42,4 +42,3 @@ npm run start:dev
 The core service owns authentication, members, CMS users, stocks, wallet, orders, portfolio, analytics, price alerts, Stripe integration, and event publishing.
 
 The notification service consumes RabbitMQ notification events and sends transactional emails.
-
