@@ -30,8 +30,20 @@ export default () => ({
     ttl: parseInt(process.env.AUTH_THROTTLE_TTL_MS ?? '60000', 10),
     limit: parseInt(process.env.AUTH_THROTTLE_LIMIT ?? '10', 10),
   },
+  auth: {
+    otpTtlMinutes: parseInt(process.env.OTP_TTL_MINUTES ?? '10', 10),
+  },
+  withdrawals: {
+    holdingPeriodHours: parseInt(
+      process.env.WITHDRAWAL_HOLDING_PERIOD_HOURS ?? '48',
+      10,
+    ),
+  },
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    successUrl:
+      process.env.STRIPE_SUCCESS_URL ?? 'http://localhost:8080/wallet',
+    cancelUrl: process.env.STRIPE_CANCEL_URL ?? 'http://localhost:8080/wallet',
   },
 });

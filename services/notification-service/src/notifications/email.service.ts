@@ -76,6 +76,14 @@ export class EmailService {
           text: `Hello ${event.payload.fullName}, your CMS ${event.payload.role} account has been created. Temporary password: ${event.payload.temporaryPassword}`,
           html: `<p>Hello ${event.payload.fullName},</p><p>Your CMS <strong>${event.payload.role}</strong> account has been created.</p><p>Temporary password: <strong>${event.payload.temporaryPassword}</strong></p>`,
         };
+
+      case NotificationEventType.WithdrawalReviewed:
+        return {
+          to: event.payload.email,
+          subject: `Withdrawal ${event.payload.status}`,
+          text: `Hello ${event.payload.fullName}, your $${event.payload.amount} withdrawal was ${event.payload.status}.${event.payload.reason ? ` Reason: ${event.payload.reason}` : ''}`,
+          html: `<p>Hello ${event.payload.fullName},</p><p>Your <strong>$${event.payload.amount}</strong> withdrawal was <strong>${event.payload.status}</strong>.</p>${event.payload.reason ? `<p>Reason: ${event.payload.reason}</p>` : ''}`,
+        };
     }
   }
 }

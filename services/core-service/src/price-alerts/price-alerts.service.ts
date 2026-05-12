@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -35,7 +36,7 @@ export class PriceAlertsService {
       memberId: new Types.ObjectId(user.sub),
       stockId: stock._id,
       ticker: stock.ticker,
-      thresholdPrice: dto.thresholdPrice,
+      thresholdPrice: this.getThresholdPrice(dto),
     });
   }
 
@@ -66,5 +67,15 @@ export class PriceAlertsService {
     if (user.type !== 'member') {
       throw new ForbiddenException('Only members can manage price alerts');
     }
+  }
+
+  private getThresholdPrice(dto: CreatePriceAlertDto): number {
+    const thresholdPrice = dto.thresholdPrice ?? dto.targetPrice;
+
+    if (thresholdPrice === undefined) {
+      throw new BadRequestException('thresholdPrice is required');
+    }
+
+    return thresholdPrice;
   }
 }

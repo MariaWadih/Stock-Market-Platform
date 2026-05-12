@@ -21,6 +21,8 @@ This folder contains the required submission documentation for the Stock Market 
 
 The collection is written against the gateway so requests exercise routing, request validation, rate limiting, and forwarding.
 
+Wallet deposits are Stripe-only. Use the checkout endpoint to create a Stripe session, then use Stripe CLI or Dashboard test webhooks to send `checkout.session.completed` to `/wallet/deposit/webhook`.
+
 ## Notification Testing
 
 The core service publishes RabbitMQ events for OTP delivery, wallet credit confirmations, trade execution confirmations, price alerts, and CMS account provisioning.

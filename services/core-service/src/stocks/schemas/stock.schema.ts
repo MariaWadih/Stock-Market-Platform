@@ -20,6 +20,15 @@ export class Stock {
   @Prop({ required: true, trim: true })
   description!: string;
 
+  @Prop({ min: 0 })
+  marketCap?: number;
+
+  @Prop({ min: 0 })
+  peRatio?: number;
+
+  @Prop({ min: 0 })
+  dividendYield?: number;
+
   @Prop({ default: true })
   isListed!: boolean;
 }

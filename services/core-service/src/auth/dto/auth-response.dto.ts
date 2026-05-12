@@ -8,5 +8,6 @@ export interface AuthResponseDto {
     fullName: string;
     type: 'member' | 'cms';
     role?: CmsRole;
+    shouldPromptWalletFunding?: boolean;
   };
 }

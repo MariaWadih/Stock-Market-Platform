@@ -4,10 +4,11 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { randomInt } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 import { Model, Types } from 'mongoose';
 import { CmsUser, CmsUserDocument } from '../cms-users/schemas/cms-user.schema';
 import { MemberStatus } from '../common/enums/member-status.enum';
@@ -23,7 +24,6 @@ import { SetPasswordDto } from './dto/set-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { Otp, OtpDocument } from './schemas/otp.schema';
 
-const OTP_TTL_MINUTES = 10;
 const MINIMUM_MEMBER_AGE = 18;
 const PASSWORD_SALT_ROUNDS = 12;
 
@@ -38,6 +38,7 @@ export class AuthService {
     private readonly otpModel: Model<OtpDocument>,
     private readonly jwtService: JwtService,
     private readonly notificationsService: NotificationsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async registerMember(dto: RegisterMemberDto): Promise<{ message: string }> {
@@ -59,6 +60,8 @@ export class AuthService {
       email,
       nationalId: dto.nationalId,
       dateOfBirth: dto.dateOfBirth,
+      referralCode: await this.generateUniqueReferralCode(),
+      referredByCode: dto.referralCode?.trim().toUpperCase(),
     });
 
     await this.createOtp(email, member._id);
@@ -180,7 +183,9 @@ export class AuthService {
   ): Promise<void> {
     const code = randomInt(100000, 999999).toString();
     const codeHash = await bcrypt.hash(code, PASSWORD_SALT_ROUNDS);
-    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
+    const otpTtlMinutes =
+      this.configService.getOrThrow<number>('auth.otpTtlMinutes');
+    const expiresAt = new Date(Date.now() + otpTtlMinutes * 60 * 1000);
 
     await this.otpModel.create({
       email,
@@ -196,7 +201,7 @@ export class AuthService {
       payload: {
         email,
         code,
-        expiresInMinutes: OTP_TTL_MINUTES,
+        expiresInMinutes: otpTtlMinutes,
       },
     });
   }
@@ -228,6 +233,7 @@ export class AuthService {
         email: member.email,
         fullName: member.fullName,
         type: 'member',
+        shouldPromptWalletFunding: !member.hasFundedWallet,
       },
     };
   }
@@ -252,5 +258,20 @@ export class AuthService {
         role: cmsUser.role,
       },
     };
+  }
+
+  private async generateUniqueReferralCode(): Promise<string> {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const code = randomBytes(5).toString('hex').toUpperCase();
+      const existingMember = await this.memberModel.exists({
+        referralCode: code,
+      });
+
+      if (!existingMember) {
+        return code;
+      }
+    }
+
+    throw new ConflictException('Could not generate a unique referral code');
   }
 }

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Member, MemberSchema } from '../members/schemas/member.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 import {
   WalletTransaction,
   WalletTransactionSchema,
@@ -14,8 +16,10 @@ import { WithdrawalsService } from './withdrawals.service';
 
 @Module({
   imports: [
+    NotificationsModule,
     MongooseModule.forFeature([
       { name: WithdrawalRequest.name, schema: WithdrawalRequestSchema },
+      { name: Member.name, schema: MemberSchema },
       { name: Wallet.name, schema: WalletSchema },
       { name: WalletTransaction.name, schema: WalletTransactionSchema },
     ]),

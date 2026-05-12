@@ -14,6 +14,7 @@ import { roundMoney } from '../common/utils/money.util';
 import { Member, MemberDocument } from '../members/schemas/member.schema';
 import { NotificationEventType } from '../notifications/notification-event';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PortfolioEventsService } from '../portfolio/portfolio-events.service';
 import {
   PortfolioPosition,
   PortfolioPositionDocument,
@@ -43,6 +44,7 @@ export class OrdersService {
     @InjectModel(Member.name)
     private readonly memberModel: Model<MemberDocument>,
     private readonly notificationsService: NotificationsService,
+    private readonly portfolioEventsService: PortfolioEventsService,
   ) {}
 
   async buy(user: AuthenticatedUser, dto: CreateOrderDto) {
@@ -96,6 +98,7 @@ export class OrdersService {
       price: stock.currentPrice,
       totalValue,
     });
+    await this.publishPortfolioUpdated(memberId);
 
     return order;
   }
@@ -166,6 +169,7 @@ export class OrdersService {
       totalValue,
       realizedProfitLoss,
     });
+    await this.publishPortfolioUpdated(memberId);
 
     return order;
   }
@@ -254,6 +258,45 @@ export class OrdersService {
         fullName: member.fullName,
         ...trade,
       },
+    });
+  }
+
+  private async publishPortfolioUpdated(
+    memberId: Types.ObjectId,
+  ): Promise<void> {
+    const positions = await this.portfolioPositionModel
+      .find({ memberId, quantity: { $gt: 0 } })
+      .select('stockId quantity')
+      .exec();
+
+    if (positions.length === 0) {
+      this.portfolioEventsService.emitPortfolioUpdated({
+        memberId: memberId.toString(),
+        totalMarketValue: 0,
+        occurredAt: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const stocks = await this.stockModel
+      .find({ _id: { $in: positions.map((position) => position.stockId) } })
+      .select('currentPrice')
+      .exec();
+    const priceByStockId = new Map(
+      stocks.map((stock) => [stock._id.toString(), stock.currentPrice]),
+    );
+    const totalMarketValue = roundMoney(
+      positions.reduce((total, position) => {
+        const currentPrice = priceByStockId.get(position.stockId.toString());
+
+        return total + position.quantity * (currentPrice ?? 0);
+      }, 0),
+    );
+
+    this.portfolioEventsService.emitPortfolioUpdated({
+      memberId: memberId.toString(),
+      totalMarketValue,
+      occurredAt: new Date().toISOString(),
     });
   }
 }

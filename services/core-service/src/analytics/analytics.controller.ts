@@ -43,4 +43,16 @@ export class AnalyticsController {
   getSectorAllocation() {
     return this.analyticsService.getSectorAllocation();
   }
+
+  @Get('admin/summary')
+  @Roles(CmsRole.Administrator)
+  getAdministratorSummary() {
+    return this.analyticsService.getAdministratorSummary();
+  }
+
+  @Get('admin/negative-wallets')
+  @Roles(CmsRole.Administrator)
+  getNegativeWalletAlerts() {
+    return this.analyticsService.getNegativeWalletAlerts();
+  }
 }

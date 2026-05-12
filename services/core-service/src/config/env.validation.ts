@@ -84,6 +84,16 @@ class CoreEnvironmentVariables {
   @Min(1)
   AUTH_THROTTLE_LIMIT = 10;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  OTP_TTL_MINUTES = 10;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  WITHDRAWAL_HOLDING_PERIOD_HOURS = 48;
+
   @IsString()
   @IsOptional()
   STRIPE_SECRET_KEY?: string;
@@ -91,6 +101,14 @@ class CoreEnvironmentVariables {
   @IsString()
   @IsOptional()
   STRIPE_WEBHOOK_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  STRIPE_SUCCESS_URL = 'http://localhost:8080/wallet';
+
+  @IsString()
+  @IsOptional()
+  STRIPE_CANCEL_URL = 'http://localhost:8080/wallet';
 }
 
 export function validateEnvironment(
